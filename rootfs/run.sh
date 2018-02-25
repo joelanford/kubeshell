@@ -2,6 +2,8 @@
 
 set -e
 
+env | grep -v -P "^(_|PWD|SHLVL|HOME|HOSTNAME|PATH)" | awk '{print "export " $0}' >> /etc/profile.d/global.sh
+
 #
 # Set defaults
 #
@@ -12,8 +14,6 @@ set -e
 : ${KS_GID:="${KS_UID}"}
 
 : ${KS_IN_CLUSTER:="false"}
-: ${KS_CLUSTER_NAME:="k8s"}
-: ${KS_NAMESPACE:=`cat /run/secrets/kubernetes.io/serviceaccount/namespace`}
 
 : ${KS_ENABLE_SUDO:="false"}
 
@@ -46,6 +46,9 @@ fi
 
 
 if [ "${KS_IN_CLUSTER}" = "true" ]; then
+    : ${KS_CLUSTER_NAME:="k8s"}
+    : ${KS_NAMESPACE:=`cat /run/secrets/kubernetes.io/serviceaccount/namespace`}
+
     TOKEN=``
     runuser -l ${KS_USER} -c "kubectl config set-cluster ${KS_CLUSTER_NAME} --server=https://kubernetes.default --certificate-authority=/run/secrets/kubernetes.io/serviceaccount/ca.crt 2>&1 > /dev/null"
     runuser -l ${KS_USER} -c "kubectl config set-credentials ${KS_USER} --token=\"`cat /run/secrets/kubernetes.io/serviceaccount/token`\" 2>&1 > /dev/null"
